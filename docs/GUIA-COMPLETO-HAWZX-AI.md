@@ -16,6 +16,7 @@
 7. [Deploy Railway](#deploy)
 8. [Gerenciamento Pós-Deploy](#gerenciamento-pos-deploy)
     8.1. [Variáveis de Ambiente](#variaveis-ambiente)
+    8.2. [Conectando um Domínio Customizado](#dominio-customizado)
 9. [Troubleshooting](#troubleshooting)
 
 ---
@@ -564,6 +565,40 @@ port = int(os.getenv("PORT", 8000))
 ```
 
 A chamada `load_dotenv()` é crucial para o desenvolvimento local, onde você armazena suas chaves em um arquivo `.env`. No entanto, quando a aplicação é executada na Railway (ou em qualquer ambiente de produção configurado corretamente), as variáveis já estão disponíveis no ambiente do sistema e `load_dotenv()` não fará nada (ou tentará carregar um `.env` inexistente, o que é inofensivo). É uma prática comum manter `load_dotenv()` no código para conveniência local, mas é importante entender que em produção, as variáveis vêm do ambiente da plataforma.
+
+### 8.2. Conectando um Domínio Customizado {#dominio-customizado}
+
+Ter um domínio próprio (como `seusite.com`) para sua aplicação em produção confere profissionalismo e facilita o acesso dos usuários. A Railway simplifica bastante esse processo.
+
+#### Pré-requisitos:
+
+-   Um domínio registrado (por exemplo, via GoDaddy, Namecheap, Registro.br, etc.).
+-   Acesso ao painel de controle de DNS do seu provedor de domínio.
+
+#### Passos para conectar na Railway:
+
+1.  **Acesse seu Projeto na Railway:** No dashboard da Railway, navegue até o seu projeto HAWZX-AI.
+2.  **Aba "Domains":** Clique na aba "Domains" (Domínios).
+3.  **Adicionar Domínio Customizado:**
+    *   Clique em "New Domain".
+    *   Insira o nome do seu domínio customizado (ex: `meuhawzx.com` ou `app.meuhawzx.com`).
+    *   A Railway irá fornecer as entradas DNS que você precisa configurar no seu provedor de domínio. Geralmente, serão entradas `CNAME` ou `A`.
+4.  **Configure o DNS no seu Provedor de Domínio:**
+    *   Acesse o painel de controle do seu provedor de domínio (onde você registrou o domínio).
+    *   Localize a seção de gerenciamento de DNS (geralmente chamada de "DNS Management", "Advanced DNS" ou similar).
+    *   **Adicione as entradas conforme as instruções da Railway.** Por exemplo:
+        *   Se for um subdomínio (`app.meuhawzx.com`), você provavelmente adicionará uma entrada `CNAME` apontando para o domínio gerado pela Railway (ex: `seu-app.up.railway.app`).
+        *   Se for o domínio raiz (`meuhawzx.com`), a Railway pode pedir para adicionar entradas `A` ou `ALIAS`/`ANAME`.
+    *   Salve as alterações no seu provedor de domínio.
+5.  **Verificação na Railway:**
+    *   Retorne à Railway. O status do seu domínio customizado deve mudar para "Verifying" e, após alguns minutos (ou horas, devido à propagação de DNS), para "Active".
+    *   A Railway automaticamente provisionará um certificado SSL/TLS para seu domínio, garantindo que sua aplicação seja acessível via `https://`.
+
+#### Considerações:
+
+-   **Propagação DNS:** A propagação das alterações de DNS pode levar de alguns minutos a 48 horas para se espalhar globalmente. Tenha paciência.
+-   **Certificado SSL:** A Railway lida com o SSL para você, então não há necessidade de configurar nada manualmente.
+-   **Remoção:** Para remover um domínio customizado, basta selecioná-lo na aba "Domains" e clicar em "Delete".
 
 ---
 
