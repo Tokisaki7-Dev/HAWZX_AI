@@ -1,0 +1,11 @@
+venv
+__pycache__
+*.pyc
+.env
+.git
+node_modules
+desktop
+frontend/node_modules
+frontend/.next
+tests
+.vscode

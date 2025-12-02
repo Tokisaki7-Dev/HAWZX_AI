@@ -121,3 +121,6 @@ if __name__ == '__main__':
     print('='*50 + '\n')
 
     app.run(host=host, port=port, debug=debug)
+
+# Vercel serverless handler
+app = app
