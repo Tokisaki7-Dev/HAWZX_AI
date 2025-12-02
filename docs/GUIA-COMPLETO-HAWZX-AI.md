@@ -33,9 +33,10 @@ Assistente de IA para jogos com:
 
 ### Stack
 
-**Backend:** Python 3.11 + FastAPI + Uvicorn
+**Backend:** Python 3.11 + Flask + Gunicorn
 **IA:** Google Gemini Pro + Groq LLaMA 3 (GRÁTIS)
-**Frontend:** Electron + HTML/CSS/JS
+**Frontend Web:** Next.js + React
+**Frontend Desktop:** Electron + React
 **Deploy:** Railway (Plano grátis $5/mês)
 
 ---
@@ -65,27 +66,32 @@ winget install Microsoft.VisualStudioCode
 
 ```
 HAWZX-AI/
-├── backend/
-│   ├── app.py                  # FastAPI principal
+├── backend/                   # Aplicação Flask (API)
+│   ├── app.py                  # Aplicação Flask principal
 │   └── services/
-│       └── ai_service.py       # Serviço de IA
-├── frontend/
-│   ├── index.html
-│   ├── style.css
-│   └── renderer.js
-├── .env                        # Suas keys (NÃO commitar)
+│       └── ai_service.py       # Serviço de IA (Gemini/Groq)
+├── frontend/                  # Aplicação Web Next.js (Frontend)
+│   ├── src/
+│   ├── pages/
+│   └── package.json            # Dependências e scripts do Next.js
+├── desktop/                   # Aplicação Desktop Electron (Frontend com React)
+│   ├── electron/               # Código principal do Electron
+│   │   └── main.js             # Ponto de entrada do Electron
+│   ├── src/                    # Código-fonte do React (Desktop UI)
+│   │   └── App.jsx
+│   └── package.json            # Dependências e scripts do Electron/React
+├── .env                        # Variáveis de ambiente (NÃO commitar)
 ├── .gitignore
-├── requirements.txt            # Dependências Python
-├── package.json               # Dependências Node
-├── main.js                    # Electron
-├── Procfile                   # Railway
-├── railway.json               # Config Railway
-└── runtime.txt                # Python 3.11
+├── requirements.txt            # Dependências Python (Backend)
+├── Procfile                   # Configuração para Railway (Backend)
+├── railway.json               # Configuração do Railway
+├── runtime.txt                # Versão do Python
+
 ```
 
 ---
 
-## 4. BACKEND {#backend}
+## 4. BACKEND FLASK {#backend}
 
 ### Criar Projeto
 
@@ -120,52 +126,129 @@ pip install -r requirements.txt
 ### backend/app.py
 
 ```python
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-import uvicorn
 import os
+import sys
+from flask import Flask, jsonify, request
+from flask_cors import CORS
 from dotenv import load_dotenv
+import logging
+from datetime import datetime
 
 load_dotenv()
 
-app = FastAPI(title="HAWZX-AI API")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+# Configurar logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
 )
+logger = logging.getLogger(__name__)
 
-@app.get("/")
-async def root():
-    return {
-        "message": "HAWZX-AI API Online 🎮",
-        "version": "1.0.0"
+# Importar blueprints
+from backend.routes.api_routes import api_bp
+from backend.routes.auth_routes import auth_bp
+from backend.routes.ai_routes import ai_bp
+from backend.database import init_db
+
+app = Flask(__name__)
+
+# Configurações
+app.config['DEBUG'] = os.getenv('FLASK_DEBUG', 'False') == 'True'
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
+app.config['JSON_SORT_KEYS'] = False
+
+# CORS - permitir requisições cruzadas
+CORS(app, resources={
+    r'/api/*': {
+        'origins': os.getenv('CORS_ORIGINS', '*').split(','),
+        'methods': ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+        'allow_headers': ['Content-Type', 'Authorization'],
+        'supports_credentials': True,
+        'max_age': 3600
     }
+})
 
-@app.get("/health")
-async def health():
-    return {
-        "status": "healthy",
-        "gemini": bool(os.getenv("GOOGLE_AI_API_KEY")),
-        "groq": bool(os.getenv("GROQ_API_KEY"))
-    }
+# Inicializar banco de dados
+try:
+    init_db()
+    logger.info('✓ Database initialized')
+except Exception as e:
+    logger.error(f'✗ Database initialization failed: {e}')
 
-@app.post("/api/chat")
-async def chat(message: str):
-    try:
-        from backend.services.ai_service import AIService
-        ai = AIService()
-        response = await ai.chat(message)
-        return {"response": response}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+# Registrar blueprints
+app.register_blueprint(api_bp)
+app.register_blueprint(auth_bp)
+app.register_blueprint(ai_bp)
 
-if __name__ == "__main__":
-    port = int(os.getenv("PORT", 8000))
-    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=True)
+# Rota raiz
+@app.route('/', methods=['GET'])
+def root():
+    return jsonify({
+        'service': 'HAWZX-AI',
+        'version': '1.0.0',
+        'status': 'online',
+        'timestamp': datetime.utcnow().isoformat(),
+        'endpoints': {
+            'health': '/api/health',
+            'info': '/api/info',
+            'auth': '/api/auth',
+            'ai': '/api/ai'
+        }
+    }), 200
+
+# Tratamento de erros 404
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({
+        'error': 'Not Found',
+        'status': 404,
+        'message': 'The requested resource was not found'
+    }), 404
+
+# Tratamento de erros 500
+@app.errorhandler(500)
+def internal_error(error):
+    logger.error(f'Internal server error: {error}')
+    return jsonify({
+        'error': 'Internal Server Error',
+        'status': 500,
+        'message': 'An unexpected error occurred'
+    }), 500
+
+# Tratamento de exceções gerais
+@app.errorhandler(Exception)
+def handle_exception(error):
+    logger.error(f'Unhandled exception: {error}')
+    return jsonify({
+        'error': 'Server Error',
+        'status': 500
+    }), 500
+
+# Middleware de logging
+@app.before_request
+def log_request():
+    logger.info(f'{request.method} {request.path}')
+
+@app.after_request
+def log_response(response):
+    logger.info(f'Response: {response.status_code}')
+    return response
+
+if __name__ == '__main__':
+    port = int(os.getenv('FLASK_PORT', 5000))
+    host = os.getenv('FLASK_HOST', '0.0.0.0')
+    debug = os.getenv('FLASK_DEBUG', 'True') == 'True' # Changed from 'False' for development guide
+
+    print('\n' + '='*50)
+    print('🚀 HAWZX-AI Backend')
+    print('='*50)
+    print(f'📡 Host: {host}:{port}')
+    print(f'🔍 Debug: {debug}')
+    print(f'🌐 API: http://localhost:{port}/api')
+    print(f'💬 AI Chat: http://localhost:{port}/api/ai/chat')
+    print(f'🔐 Auth: http://localhost:{port}/api/auth')
+    print('='*50 + '\n')
+
+    app.run(host=host, port=port, debug=debug)
 ```
 
 ### backend/services/ai_service.py
