@@ -1,36 +1,54 @@
 import os
-import google.generativeai as genai
-from groq import Groq
+import openai
+from dotenv import load_dotenv
+import json
+from typing import List, Dict, Optional
+
+load_dotenv()
+
+openai.api_key = os.getenv('OPENAI_API_KEY')
 
 class AIService:
     def __init__(self):
-        # Gemini
-        key = os.getenv("GOOGLE_AI_API_KEY")
-        if key:
-            genai.configure(api_key=key)
-            self.gemini = genai.GenerativeModel('gemini-pro')
-        else:
-            self.gemini = None
-            
-        # Groq
-        key = os.getenv("GROQ_API_KEY")
-        if key:
-            self.groq = Groq(api_key=key)
-        else:
-            self.groq = None
-        
-    async def chat(self, message: str) -> str:
+        self.model = os.getenv('OPENAI_MODEL', 'gpt-3.5-turbo')
+        self.max_tokens = int(os.getenv('OPENAI_MAX_TOKENS', 2000))
+        self.temperature = float(os.getenv('OPENAI_TEMPERATURE', 0.7))
+    
+    def get_completion(self, messages: List[Dict], system_prompt: Optional[str] = None) -> Dict:
         try:
-            if self.gemini:
-                response = self.gemini.generate_content(message)
-                return response.text
-            elif self.groq:
-                response = self.groq.chat.completions.create(
-                    model="llama3-70b-8192",
-                    messages=[{"role": "user", "content": message}]
-                )
-                return response.choices[0].message.content
-            else:
-                return "❌ Configure GOOGLE_AI_API_KEY ou GROQ_API_KEY"
+            if system_prompt:
+                messages = [{'role': 'system', 'content': system_prompt}] + messages
+            
+            response = openai.ChatCompletion.create(
+                model=self.model,
+                messages=messages,
+                max_tokens=self.max_tokens,
+                temperature=self.temperature
+            )
+            
+            return {
+                'success': True,
+                'content': response.choices[0].message.content,
+                'tokens_used': response.usage.total_tokens,
+                'model': self.model
+            }
         except Exception as e:
-            return f"❌ Erro: {str(e)}"
+            return {
+                'success': False,
+                'error': str(e)
+            }
+    
+    def get_conversation_summary(self, messages: List[Dict]) -> str:
+        try:
+            prompt = 'Resuma esta conversa em uma frase curta:'
+            response = openai.ChatCompletion.create(
+                model=self.model,
+                messages=[{'role': 'user', 'content': prompt}] + messages[-3:],
+                max_tokens=100,
+                temperature=0.5
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            return 'Conversa'
+
+ai_service = AIService()

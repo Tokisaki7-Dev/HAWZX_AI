@@ -1,145 +1,133 @@
-# HAWZX-AI 🚀
+# 🤖 HAWZX-AI
 
-Aplicação completa de IA com Backend Python/Flask e Frontend Next.js.
+Aplicação inteligente de análise de dados com IA usando OpenAI, com interface web (Next.js) e aplicativo desktop (Electron).
 
 ## 📋 Requisitos
 
-- Python 3.11+
-- Node.js 18+
+- Python 3.9+
+- Node.js 16+
 - npm ou yarn
-- Git
+- OpenAI API Key
 
-## 🚀 Início Rápido
+## 🚀 Inicialização Rápida
 
-### 1. Clone o repositório
-\``bash
-git clone https://github.com/Tokisaki7-Dev/HAWZX_AI.git
-cd HAWZX-AI
-\``
+### Backend (Flask)
 
-### 2. Configure o ambiente
-\``bash
-cp .env.example .env
-# Edite .env com suas configurações
-\``
-
-### 3. Execute o setup
-\``bash
-bash scripts/setup.sh
-\``
-
-### 4. Inicie a aplicação
-\``bash
-# Terminal 1 - Backend
+\\\ash
 cd backend
+pip install -r requirements.txt
 python app.py
+\\\
 
-# Terminal 2 - Frontend
+### Frontend (Next.js)
+
+\\\ash
 cd frontend
+npm install
 npm run dev
-\``
+\\\
+
+### Desktop (Electron)
+
+\\\ash
+cd desktop
+npm install
+npm start
+\\\
 
 ## 📁 Estrutura do Projeto
 
-\``
+\\\
 HAWZX-AI/
-├── backend/              # API Flask
-│   ├── app.py           # Aplicação principal
-│   ├── config.py        # Configurações
-│   ├── models.py        # Modelos de dados
-│   ├── routes.py        # Rotas da API
-│   ├── utils/           # Utilitários
-│   ├── services/        # Serviços
-│   └── __pycache__/     # Cache Python
-├── frontend/            # Aplicação Next.js
-│   ├── app.jsx          # Página principal
-│   ├── components/      # Componentes React
-│   ├── pages/           # Páginas Next.js
-│   ├── public/          # Arquivos estáticos
-│   ├── src/             # Código-fonte
-│   ├── package.json     # Dependências
-│   ├── next.config.js   # Configuração Next.js
-│   └── tsconfig.json    # Configuração TypeScript
-├── tests/               # Testes
-│   └── test_api.py      # Testes de API
-├── scripts/             # Scripts úteis
-│   └── setup.sh         # Script de setup
-├── docs/                # Documentação
-├── config/              # Configurações
-├── data/                # Dados
-├── logs/                # Logs
-├── .env                 # Variáveis de ambiente
-├── .env.example         # Exemplo de variáveis
-├── requirements.txt     # Dependências Python
-├── package.json         # Dependências Node
-├── Dockerfile           # Configuração Docker
-├── docker-compose.yml   # Docker Compose
-├── start.sh             # Script de inicialização
-├── Procfile             # Configuração Heroku
-├── railway.json         # Configuração Railway
-├── render.yaml          # Configuração Render
-└── README.md            # Este arquivo
-\``
+├── backend/           # API Flask
+│   ├── migrations/    # Database migrations
+│   ├── app.py        # Main Flask app
+│   └── requirements.txt
+├── frontend/         # Next.js Web App
+│   ├── src/
+│   ├── pages/
+│   └── package.json
+├── desktop/          # Electron Desktop App
+│   ├── main.js
+│   ├── preload.js
+│   └── package.json
+├── config/           # Configuration files
+├── scripts/          # Utility scripts
+├── .env             # Environment variables
+└── README.md
+\\\
 
-## 🔌 API Endpoints
+## 🔧 Configuração
 
-| Método | Endpoint | Descrição |
-|--------|----------|-----------|
-| GET | /api/health | Verifica saúde da API |
-| GET | /api/version | Retorna versão da API |
-| GET | /api/test | Teste da API |
+1. Copie \.env.example\ para \.env\
+2. Adicione sua chave da API OpenAI
+3. Configure DATABASE_URL se usar PostgreSQL
 
-## 🧪 Executar Testes
+## 📦 Instalação Completa
 
-\``bash
-pytest tests/
-\``
+\\\ash
+# Backend
+python -m venv venv
+source venv/bin/activate  # Windows: venv\\Scripts\\activate
+pip install -r backend/requirements.txt
 
-## 🐳 Docker
+# Frontend
+cd frontend
+npm install
+cd ..
 
-### Build
-\``bash
-docker build -t hawzx-ai .
-\``
+# Desktop
+cd desktop
+npm install
+cd ..
+\\\
 
-### Run
-\``bash
-docker run -p 5000:5000 -p 3000:3000 hawzx-ai
-\``
+## 🎯 Desenvolvimento
 
-## 🚀 Deployment
+\\\ash
+# Terminal 1: Backend
+cd backend && python app.py
 
-### Railway
-Ver configuração em \`railway.json\`
+# Terminal 2: Frontend
+cd frontend && npm run dev
 
-### Render
-Ver configuração em \`render.yaml\`
+# Terminal 3: Desktop
+cd desktop && npm start
+\\\
 
-### Docker
-Ver \`Dockerfile\`
+## 🏗️ Build para Produção
+
+\\\ash
+# Frontend
+cd frontend
+npm run build
+
+# Desktop
+cd desktop
+npm run dist
+\\\
 
 ## 📝 Variáveis de Ambiente
 
-\``env
-FLASK_DEBUG=True
-FLASK_ENV=development
-SECRET_KEY=sua-chave-secreta
-DATABASE_URL=sqlite:///app.db
-API_PORT=5000
-API_HOST=0.0.0.0
-\``
+\\\
+FLASK_HOST=0.0.0.0
+FLASK_PORT=5000
+DATABASE_URL=sqlite:///hawzx.db
+OPENAI_API_KEY=seu-api-key
+CORS_ORIGINS=*
+\\\
 
-## 🤝 Contribuindo
+## 🔐 Segurança
 
-1. Crie uma branch para sua feature (\`git checkout -b feature/feature-name\`)
-2. Commit suas mudanças (\`git commit -m 'Add feature'\`)
-3. Push para a branch (\`git push origin feature/feature-name\`)
-4. Abra um Pull Request
+- Nunca commit \.env\ no repositório
+- Use variáveis de ambiente para chaves sensíveis
+- Valide todas as entradas no backend
+- Implemente autenticação JWT
 
-## 📄 License
+## 📄 Licença
 
-MIT License - Veja \`LICENSE\` para mais detalhes
+MIT License
 
-## 👨‍💻 Autor
+---
 
-HAWZX-AI - Desenvolvido com ❤️
+Desenvolvido por HAWZX Team

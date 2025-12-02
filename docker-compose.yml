@@ -1,37 +1,38 @@
 version: '3.8'
 
 services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: hawzx
+      POSTGRES_PASSWORD: changeme
+      POSTGRES_DB: hawzx_ai
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
   backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: hawzx-backend
+    build: ./backend
     ports:
       - "5000:5000"
     environment:
-      - FLASK_ENV=production
-      - FLASK_DEBUG=False
+      DATABASE_URL: postgresql://hawzx:changeme@db:5432/hawzx_ai
+      OPENAI_API_KEY: \
+      FLASK_ENV: production
+    depends_on:
+      - db
     volumes:
-      - ./backend:/app/backend
-      - ./logs:/app/logs
-    command: python backend/app.py
-    networks:
-      - hawzx-network
+      - ./backend:/app
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: hawzx-frontend
+    build: ./frontend
     ports:
       - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:5000/api
     depends_on:
       - backend
-    environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:5000/api
-    networks:
-      - hawzx-network
 
-networks:
-  hawzx-network:
-    driver: bridge
+volumes:
+  postgres_data:

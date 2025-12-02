@@ -1,0 +1,41 @@
+{
+  "name": "hawzx-desktop",
+  "version": "1.0.0",
+  "description": "HAWZX-AI Desktop Application",
+  "main": "main.js",
+  "homepage": "./",
+  "scripts": {
+    "dev": "electron .",
+    "build": "electron-builder",
+    "dist": "electron-builder --publish=never",
+    "start": "electron ."
+  },
+  "dependencies": {
+    "axios": "^1.4.0",
+    "dotenv": "^16.0.3"
+  },
+  "devDependencies": {
+    "electron": "^latest",
+    "electron-builder": "^latest"
+  },
+  "build": {
+    "appId": "com.hawzx.app",
+    "productName": "HAWZX AI",
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": ["msi", "portable"],
+      "certificateFile": null
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}
