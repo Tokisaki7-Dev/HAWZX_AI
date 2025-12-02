@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: hawzx-ai
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: GOOGLE_AI_API_KEY
+        scope: run
+      - key: GROQ_API_KEY
+        scope: run
