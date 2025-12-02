@@ -508,7 +508,62 @@ git push -u origin main
    - GROQ_API_KEY
    - PORT=8000
 6. **Deploy** (aguarde 2-3 min)
-7. **Domínio:** `seu-app.up.railway.app`
+7. Domínio: `seu-app.up.railway.app`
+
+---
+
+## 8. GERENCIAMENTO PÓS-DEPLOY {#gerenciamento-pos-deploy}
+
+Após o deploy bem-sucedido na Railway, é fundamental entender como gerenciar sua aplicação em produção. Esta seção abordará os primeiros passos para manter sua aplicação segura e configurada.
+
+### 8.1. Configurando Variáveis de Ambiente em Produção {#variaveis-ambiente}
+
+Um dos aspectos mais críticos da segurança e manutenção de qualquer aplicação é o gerenciamento de configurações sensíveis, como chaves de API, senhas de banco de dados e outros segredos. **Nunca** inclua esses dados diretamente no seu código-fonte ou os commite para o controle de versão. Em vez disso, utilize variáveis de ambiente.
+
+A Railway (e a maioria das plataformas de deploy) oferece um mecanismo seguro para gerenciar essas variáveis, tornando-as acessíveis à sua aplicação em tempo de execução, mas invisíveis no seu repositório de código.
+
+#### Por que usar Variáveis de Ambiente?
+
+-   **Segurança:** Impede que informações sensíveis sejam expostas em repositórios públicos (GitHub).
+-   **Flexibilidade:** Permite alterar configurações (por exemplo, chaves de API, URLs de banco de dados) sem modificar e redeployar o código da aplicação.
+-   **Ambientes:** Facilita a gestão de configurações diferentes para desenvolvimento, staging e produção.
+
+#### Como configurar na Railway
+
+1.  **Acesse seu Projeto:** No dashboard da Railway, navegue até o seu projeto HAWZX-AI.
+2.  **Aba "Variables":** Clique na aba "Variables" (Variáveis).
+3.  **Adicionar Variável:**
+    *   Clique em "New Variable".
+    *   No campo "KEY", insira o nome da sua variável (ex: `GOOGLE_AI_API_KEY`).
+    *   No campo "VALUE", cole o valor secreto correspondente.
+    *   Repita este processo para todas as suas chaves (`GOOGLE_AI_API_KEY`, `GROQ_API_KEY`) e para `PORT=8000` (se ainda não o fez).
+
+    > **Importante:** A Railway automaticamente faz um redeploy da sua aplicação sempre que você adiciona, edita ou remove uma variável de ambiente, garantindo que as novas configurações sejam aplicadas.
+
+#### Como sua aplicação acessa essas variáveis
+
+No seu código Python (FastAPI), você já utiliza `os.getenv()` para acessar essas variáveis:
+
+```python
+import os
+from dotenv import load_dotenv
+
+# No ambiente de desenvolvimento local, .env é carregado
+# Em produção (Railway), as variáveis de ambiente já são injetadas no ambiente
+# Não é necessário (e nem recomendado) carregar .env em produção
+load_dotenv()
+
+# ...
+
+key = os.getenv("GOOGLE_AI_API_KEY")
+if key:
+    genai.configure(api_key=key)
+
+# ...
+port = int(os.getenv("PORT", 8000))
+```
+
+A chamada `load_dotenv()` é crucial para o desenvolvimento local, onde você armazena suas chaves em um arquivo `.env`. No entanto, quando a aplicação é executada na Railway (ou em qualquer ambiente de produção configurado corretamente), as variáveis já estão disponíveis no ambiente do sistema e `load_dotenv()` não fará nada (ou tentará carregar um `.env` inexistente, o que é inofensivo). É uma prática comum manter `load_dotenv()` no código para conveniência local, mas é importante entender que em produção, as variáveis vêm do ambiente da plataforma.
 
 ---
 
