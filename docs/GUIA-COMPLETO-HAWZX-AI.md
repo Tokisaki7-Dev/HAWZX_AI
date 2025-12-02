@@ -14,7 +14,9 @@
 5. [Frontend Electron](#frontend)
 6. [Integração de IA](#ia)
 7. [Deploy Railway](#deploy)
-8. [Troubleshooting](#troubleshooting)
+8. [Gerenciamento Pós-Deploy](#gerenciamento-pos-deploy)
+    8.1. [Variáveis de Ambiente](#variaveis-ambiente)
+9. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -510,7 +512,7 @@ git push -u origin main
 
 ---
 
-## 8. TROUBLESHOOTING {#troubleshooting}
+## 9. TROUBLESHOOTING {#troubleshooting}
 
 ### Build Failed
 
