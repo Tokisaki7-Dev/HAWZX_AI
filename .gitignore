@@ -30,12 +30,16 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 
-# Data
+# Data e Logs
 data/
+logs/
 *.db
 *.sqlite
-
-# Logs
 *.log
-logs/
+
+# Testes
+.pytest_cache/
+.coverage
+htmlcov/
+
 
