@@ -1,0 +1,107 @@
+name: Auto Approve Pull Requests
+
+on:
+  # Use pull_request_target to run with base repo permissions
+  pull_request_target:
+    types: [opened, ready_for_review, synchronize]
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  auto-approve:
+    if: >-
+      ${{ !github.event.pull_request.draft &&
+          (github.event.pull_request.base.ref == 'main' || github.event.pull_request.base.ref == 'HAWZX-AI') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ensure label and auto-label bot PRs
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+            const prNumber = pr.number;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const labelName = 'auto-approve';
+
+            // Only auto-label for trusted bots
+            const botAuthors = ['dependabot[bot]', 'renovate[bot]'];
+            const author = pr.user.login;
+            if (!botAuthors.includes(author)) {
+              core.info(`Skipping auto-label: author ${author} is not in trusted bot list.`);
+            } else {
+              // Ensure label exists
+              try {
+                await github.rest.issues.getLabel({ owner, repo, name: labelName });
+                core.info(`Label '${labelName}' exists.`);
+              } catch (error) {
+                if (error.status === 404) {
+                  await github.rest.issues.createLabel({
+                    owner,
+                    repo,
+                    name: labelName,
+                    color: '0e8a16',
+                    description: 'Mark PRs eligible for auto-approval'
+                  });
+                  core.info(`Created label '${labelName}'.`);
+                } else {
+                  throw error;
+                }
+              }
+
+              // Add label to PR if missing
+              const labels = pr.labels?.map(l => l.name) || [];
+              if (!labels.includes(labelName)) {
+                await github.rest.issues.addLabels({
+                  owner,
+                  repo,
+                  issue_number: prNumber,
+                  labels: [labelName]
+                });
+                core.info(`Added label '${labelName}' to PR #${prNumber}.`);
+              } else {
+                core.info(`PR #${prNumber} already has label '${labelName}'.`);
+              }
+            }
+
+      - name: Approve PR with github-script
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            // Optional: restrict auto-approve to specific authors
+            const allowedAuthors = [
+              owner, // repo owner
+              'Tokisaki7-Dev',
+              'dependabot[bot]',
+              'renovate[bot]'
+            ];
+
+            const author = context.payload.pull_request.user.login;
+            if (!allowedAuthors.includes(author)) {
+              core.info(`Skipping auto-approve: author ${author} not in allowlist.`);
+              return;
+            }
+
+            // Require an explicit label to avoid accidental approvals
+            const hasAutoLabel = context.payload.pull_request.labels?.some(l => l.name === 'auto-approve');
+            if (!hasAutoLabel) {
+              core.info('Skipping: PR lacks required label "auto-approve".');
+              return;
+            }
+
+            await github.pulls.createReview({
+              owner,
+              repo,
+              pull_number: prNumber,
+              event: 'APPROVE',
+              body: 'Auto-approved by workflow.'
+            });
+            core.info(`Auto-approved PR #${prNumber}`);

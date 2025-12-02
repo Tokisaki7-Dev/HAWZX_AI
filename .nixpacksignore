@@ -1,0 +1,20 @@
+# Ignorar arquivos Node.js e Electron (não são necessários no deploy Railway)
+node_modules/
+*.js
+*.json
+frontend/
+main.js
+package.json
+package-lock.json
+
+# Ignorar ambiente virtual Python local
+venv/
+__pycache__/
+*.pyc
+
+# Ignorar dados locais
+data/
+
+# Ignorar documentação
+*.md
+docs/
