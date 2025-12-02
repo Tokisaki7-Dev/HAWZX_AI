@@ -1,17 +1,22 @@
 #!/bin/bash
-echo "🚀 Configurando HAWZX-AI..."
+set -e
 
-# Python virtual environment
-python -m venv venv
+echo "=== Setup HAWZX-AI ==="
 
-# Ativar venv
-source venv/Scripts/activate 2>/dev/null || source venv/bin/activate 2>/dev/null
+# Backend
+echo "📦 Instalando dependências do Backend..."
+cd backend
+pip install -r ../requirements.txt
+cd ..
 
-# Instalar dependências Python
-pip install -r requirements.txt
-
-# Instalar dependências Node
+# Frontend
+echo "📦 Instalando dependências do Frontend..."
+cd frontend
 npm install
+cd ..
 
-echo "✓ Configuração completa!"
-echo "Para iniciar: npm start ou bash start.sh"
+echo "✅ Setup concluído com sucesso!"
+echo ""
+echo "Para iniciar a aplicação:"
+echo "  Terminal 1: cd backend && python app.py"
+echo "  Terminal 2: cd frontend && npm run dev"
